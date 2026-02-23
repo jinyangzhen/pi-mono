@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist-chat/
+dist-terminal/
 *.log
 .DS_Store
 *.tsbuildinfo
@@ -33,3 +35,4 @@ pi-*.html
 out.html
 packages/coding-agent/binaries/
 todo.md
+.sisyphus/
