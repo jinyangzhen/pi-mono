@@ -1,77 +1,77 @@
 {
-	"name": "@mariozechner/tian-gong",
-	"version": "0.1.0",
-	"description": "Tian-gong (天工) - Open AI agent platform with dual TUI/Web interface, derived from 天工开物",
-	"type": "module",
-	"main": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"bin": {
-		"tian-gong": "./dist/cli/index.js"
-	},
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
-		}
-	},
-	"files": [
-		"dist",
-		"public",
-		"README.md"
-	],
-	"scripts": {
-		"clean": "rm -rf dist",
-		"build": "tsc -p tsconfig.build.json && npm run copy-assets",
-		"build:watch": "tsc -p tsconfig.build.json --watch",
-		"copy-assets": "cp -r backend/server/public dist/server/ 2>/dev/null || true && cp -r fronts/dist dist/web-ui 2>/dev/null || true && cp backend/cli/banner.txt dist/cli/",
-		"dev": "node dist/cli/index.js start",
-		"start": "node dist/cli/index.js start",
-		"typecheck": "tsc --noEmit",
-		"test": "vitest --run"
-	},
-	"dependencies": {
-		"@mariozechner/pi-ai": "^0.54.0",
-		"@mariozechner/pi-agent-core": "^0.54.0",
-		"@mariozechner/pi-coding-agent": "^0.54.0",
-		"@mariozechner/pi-tui": "^0.54.0",
-		"@mariozechner/pi-web-ui": "^0.54.0",
-		"@sinclair/typebox": "^0.34.41",
-		"chalk": "^5.6.2",
-		"commander": "^12.1.0",
-		"express": "^4.21.2",
-		"express-session": "^1.18.1",
-		"node-pty": "^1.0.0",
-		"uuid": "^11.0.3",
-		"ws": "^8.18.0"
-	},
-	"devDependencies": {
-		"@types/express": "^5.0.0",
-		"@types/express-session": "^1.18.1",
-		"@types/node": "^24.3.0",
-		"@types/uuid": "^10.0.0",
-		"@types/ws": "^8.5.13",
-		"tsx": "^4.20.3",
-		"typescript": "^5.9.2",
-		"vitest": "^3.2.4"
-	},
-	"keywords": [
-		"tian-gong",
-		"天工",
-		"agent",
-		"ai",
-		"llm",
-		"automation",
-		"tui",
-		"web-ui"
-	],
-	"author": "Mario Zechner",
-	"license": "MIT",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/badlogic/pi-mono.git",
-		"directory": "packages/tian-gong"
-	},
-	"engines": {
-		"node": ">=20.0.0"
-	}
+  "name": "@mariozechner/tian-gong",
+  "version": "0.1.0",
+  "description": "Tian-gong (天工) - Open AI agent platform with dual TUI/Web interface, derived from 天工开物",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "tian-gong": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "public",
+    "README.md"
+  ],
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "tsc -p tsconfig.build.json && npm run copy-assets",
+    "build:watch": "tsc -p tsconfig.build.json --watch",
+    "copy-assets": "cp -r backend/server/public dist/server/ 2>/dev/null || true && cp backend/cli/banner.txt dist/cli/",
+    "dev": "node dist/cli/index.js start",
+    "start": "node dist/cli/index.js start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest --run"
+  },
+  "dependencies": {
+    "@mariozechner/pi-ai": "^0.54.0",
+    "@mariozechner/pi-agent-core": "^0.54.0",
+    "@mariozechner/pi-coding-agent": "^0.54.0",
+    "@mariozechner/pi-tui": "^0.54.0",
+    "@mariozechner/pi-web-ui": "^0.54.0",
+    "@sinclair/typebox": "^0.34.41",
+    "chalk": "^5.6.2",
+    "commander": "^12.1.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "node-pty": "^1.0.0",
+    "uuid": "^11.0.3",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/express-session": "^1.18.1",
+    "@types/node": "^24.3.0",
+    "@types/uuid": "^10.0.0",
+    "@types/ws": "^8.5.13",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "tian-gong",
+    "天工",
+    "agent",
+    "ai",
+    "llm",
+    "automation",
+    "tui",
+    "web-ui"
+  ],
+  "author": "Mario Zechner",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/badlogic/pi-mono.git",
+    "directory": "packages/tian-gong"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
 }

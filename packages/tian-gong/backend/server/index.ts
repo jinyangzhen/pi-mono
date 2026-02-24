@@ -74,27 +74,7 @@ export class TianGongServer {
 	private setupMiddleware(): void {
 		this.app.use(express.json());
 
-		// Serve static files - check for fronts dist in dist folder
-		const webUiDist = join(__dirname, "..", "..", "fronts");
-		const publicDir = join(__dirname, "public");
-
-		// Use web-ui dist if it exists, otherwise fall back to public
-		if (existsSync(webUiDist)) {
-			this.app.use(express.static(webUiDist));
-			// SPA fallback - serve index.html for all non-API routes that don't have a file extension
-			this.app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-				const hasExtension = /\.[^/]+$/.test(req.path);
-				if (!req.path.startsWith("/api") && !req.path.startsWith("/ws") && !hasExtension) {
-					res.sendFile(join(webUiDist, "index.html"));
-				} else {
-					next();
-				}
-			});
-		} else {
-			this.app.use(express.static(publicDir));
-		}
-
-		// CORS
+		// Static file serving removed - frontend served separately
 		this.app.use((req, res, next) => {
 			const origins = this.config.get().security.allowedOrigins;
 			const origin = req.headers.origin;
