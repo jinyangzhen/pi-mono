@@ -45,7 +45,7 @@ export default defineConfig({
     modulePreload: false,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'src/apps/chat/index.ts'),
+        main: path.resolve(__dirname, 'src/apps/chat/main.tsx'),
       },
     },
   },
