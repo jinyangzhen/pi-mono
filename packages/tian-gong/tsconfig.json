@@ -1,11 +1,11 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		"rootDir": "src",
+		"rootDir": "backend",
 		"outDir": "dist",
 		"declaration": true,
 		"declarationMap": true
 	},
-	"include": ["src/**/*"],
+	"include": ["backend/**/*"],
 	"exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
