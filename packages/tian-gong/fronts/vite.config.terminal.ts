@@ -25,11 +25,11 @@ export default defineConfig({
     port: 3002,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'http://localhost:5000',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:3000',
+        target: 'ws://localhost:5000',
         ws: true,
       },
     },
@@ -45,7 +45,7 @@ export default defineConfig({
     modulePreload: false,
     rollupOptions: {
       input: {
-        main: path.resolve(__dirname, 'src/apps/terminal/main.tsx'),
+        index: path.resolve(__dirname, 'terminal.html'),
       },
     },
   },

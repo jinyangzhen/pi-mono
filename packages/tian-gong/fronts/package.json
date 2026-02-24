@@ -8,14 +8,15 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "check": "tsc --noEmit",
-    "build:chat": "vite build --config vite.config.chat.ts && cp src/apps/chat/index.html dist-chat/",
-    "build:terminal": "vite build --config vite.config.terminal.ts && cp src/apps/terminal/index.html dist-terminal/",
+    "build:chat": "vite build --config vite.config.chat.ts && mv dist-chat/chat.html dist-chat/index.html",
+    "build:terminal": "vite build --config vite.config.terminal.ts && mv dist-terminal/terminal.html dist-terminal/index.html",
     "dev:chat": "vite --config vite.config.chat.ts",
     "dev:terminal": "vite --config vite.config.terminal.ts",
     "preview:chat": "vite preview --config vite.config.chat.ts",
     "preview:terminal": "vite preview --config vite.config.terminal.ts",
     "build:chat:watch": "vite build --config vite.config.chat.ts --watch",
-    "build:terminal:watch": "vite build --config vite.config.terminal.ts --watch"
+    "build:terminal:watch": "vite build --config vite.config.terminal.ts --watch",
+    "dev:all": "npm run build:chat && npm run build:terminal && npm run dev & npm run preview:chat & npm run preview:terminal & wait"
   },
   "dependencies": {
     "@mariozechner/mini-lit": "^0.2.0",

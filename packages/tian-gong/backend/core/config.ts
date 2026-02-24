@@ -12,7 +12,7 @@ import type { TianConfig, UserPreferences } from "./types.js";
 // ============================================================================
 
 export const DEFAULT_CONFIG: TianConfig = {
-	port: 3000,
+	port: 5000,
 	host: "0.0.0.0",
 	agentDir: join(homedir(), ".tian-gong"),
 	workspaceDir: process.cwd(),
