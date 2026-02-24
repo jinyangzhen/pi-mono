@@ -23,11 +23,26 @@ export default defineConfig({
   },
   server: {
     port: 3002,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://localhost:3000',
+        ws: true,
+      },
+    },
+  },
+  preview: {
+    port: 3002,
   },
   build: {
     outDir: 'dist-terminal',
     sourcemap: true,
     target: 'esnext',
+    minify: false,
+    modulePreload: false,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'src/apps/terminal/index.ts'),

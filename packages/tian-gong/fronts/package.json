@@ -11,7 +11,9 @@
     "build:chat": "vite build --config vite.config.chat.ts",
     "build:terminal": "vite build --config vite.config.terminal.ts",
     "dev:chat": "vite --config vite.config.chat.ts",
-    "dev:terminal": "vite --config vite.config.terminal.ts"
+    "dev:terminal": "vite --config vite.config.terminal.ts",
+    "preview:chat": "vite preview --config vite.config.chat.ts",
+    "preview:terminal": "vite preview --config vite.config.terminal.ts"
   },
   "dependencies": {
     "@mariozechner/mini-lit": "^0.2.0",
