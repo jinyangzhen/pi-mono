@@ -16,8 +16,11 @@ import { TianGongServer } from "../server/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const VERSION = "0.1.0";
-const BANNER = readFileSync(resolve(__dirname, "banner.txt"), "utf-8");
+
+// Read version from package.json
+const pkg = JSON.parse(readFileSync(resolve(__dirname, "../..", "package.json"), "utf-8"));
+const VERSION = pkg.version;
+const BANNER = readFileSync(resolve(__dirname, "banner.txt"), "utf-8").replace("{{VERSION}}", VERSION);
 
 const program = new Command();
 
