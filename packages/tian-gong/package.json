@@ -23,7 +23,7 @@
 		"clean": "rm -rf dist",
 		"build": "tsc -p tsconfig.build.json && npm run copy-assets",
 		"build:watch": "tsc -p tsconfig.build.json --watch",
-		"copy-assets": "cp -r src/server/public dist/server/ 2>/dev/null || true && cp -r web-ui/dist dist/web-ui 2>/dev/null || true",
+		"copy-assets": "cp -r src/server/public dist/server/ 2>/dev/null || true && cp -r web-ui/dist dist/web-ui 2>/dev/null || true && cp src/cli/banner.txt dist/cli/",
 		"dev": "node dist/cli/index.js",
 		"start": "node dist/cli/index.js",
 		"typecheck": "tsc --noEmit",
