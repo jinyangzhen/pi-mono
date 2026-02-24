@@ -1,17 +1,15 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { Terminal, MessageSquare, Settings, HelpCircle, Menu, X, Sun, Moon } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import SettingsDialog from './SettingsDialog'
 
 type Theme = 'light' | 'dark'
 
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [theme, setTheme] = useState<Theme>('dark')
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
 
-  // Load theme from localStorage on mount
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as Theme | null
     if (savedTheme) {
@@ -19,7 +17,6 @@ export default function Layout() {
     }
   }, [])
 
-  // Apply theme to document
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
     localStorage.setItem('theme', theme)
@@ -29,22 +26,21 @@ export default function Layout() {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark')
   }
 
+  const openSettings = () => {
+    navigate('/settings')
+  }
+
   const navItems = [
-    { path: '/', icon: MessageSquare, label: 'Chat' },
+    { path: '/chat', icon: MessageSquare, label: 'Chat' },
     { path: '/terminal', icon: Terminal, label: 'Terminal' },
   ]
 
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/' || location.pathname === '/chat'
-    return location.pathname.startsWith(path)
-  }
+  const isActive = (path: string) => location.pathname === path
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
-      {/* Header */}
       <header className="flex items-center justify-between px-4 py-2 bg-card border-b border-border shrink-0">
         <div className="flex items-center gap-3">
-          {/* Logo - Mono theme primary gray */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground">
               <span className="font-bold text-sm">AI</span>
@@ -52,13 +48,11 @@ export default function Layout() {
             <span className="font-semibold text-foreground hidden sm:block">Tian-gong</span>
           </div>
 
-          {/* Mode badge */}
           <span className="px-2 py-0.5 text-2xs font-medium bg-secondary text-secondary-foreground">
-            {(new URLSearchParams(window.location.search).get('mode') === 'terminal' || location.pathname === '/terminal') ? 'Terminal Mode' : 'Chat Mode'}
+            {location.pathname === '/terminal' ? 'Terminal Mode' : 'Chat Mode'}
           </span>
         </div>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => (
             <NavLink
@@ -76,9 +70,7 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-1">
-          {/* Theme Toggle */}
           <button 
             onClick={toggleTheme}
             className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -89,12 +81,11 @@ export default function Layout() {
           <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <HelpCircle className="w-4 h-4" />
           </button>
-          <button onClick={() => setSettingsOpen(true)} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+          <button onClick={openSettings} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <Settings className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Mobile Menu Button */}
         <button
           className="md:hidden p-2 text-muted-foreground hover:text-foreground"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -103,7 +94,6 @@ export default function Layout() {
         </button>
       </header>
 
-      {/* Mobile Navigation */}
       {mobileMenuOpen && (
         <nav className="md:hidden border-b border-border bg-card px-4 py-2 flex flex-col gap-1">
           {navItems.map((item) => (
@@ -133,7 +123,7 @@ export default function Layout() {
               <HelpCircle className="w-4 h-4" />
               <span>Help</span>
             </button>
-            <button onClick={() => setSettingsOpen(true)} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">
+            <button onClick={openSettings} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted">
               <Settings className="w-4 h-4" />
               <span>Settings</span>
             </button>
@@ -141,12 +131,10 @@ export default function Layout() {
         </nav>
       )}
 
-      {/* Main Content */}
       <main className="flex-1 overflow-hidden">
         <Outlet />
       </main>
 
-      {/* Footer info bar */}
       <footer className="hidden lg:flex items-center justify-between px-4 py-1.5 text-2xs text-muted-foreground border-t border-border bg-card shrink-0">
         <div className="flex items-center gap-4">
           <span>Tian-gong Agent v0.1.0</span>
@@ -159,7 +147,6 @@ export default function Layout() {
           <span>Press <kbd className="px-1 py-0.5 bg-background text-2xs">?</kbd> for shortcuts</span>
         </div>
       </footer>
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   )
 }

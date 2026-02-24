@@ -6,7 +6,7 @@
 ║   |____|   |__(____  /___|  /\______  /\____/|___|  /\___  /  ║
 ║                   \/     \/        \/            \//_____/    ║
 ║                                                               ║
-║           天工 (TianGong) Agent Platform v{{VERSION}}          ║ 
+║           天工 (TianGong) Agent Platform v{{VERSION}}         ║ 
 ║                                                               ║
 ║   "The Exploitation of the Works of Nature"                   ║
 ║                                          —— 天工开物 (1637)   ║

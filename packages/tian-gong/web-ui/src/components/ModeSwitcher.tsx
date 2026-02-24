@@ -1,26 +1,28 @@
 import { MessageSquare, Terminal, ChevronDown } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import { useSessionStore } from '../stores/sessionStore'
 import type { UiMode } from '../stores/types'
 
 export function ModeSwitcher() {
-  const { user, switchMode } = useAuthStore()
-  const { session, setSession } = useSessionStore()
+  const { user } = useAuthStore()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   if (!user || user.allowedModes.length <= 1) {
     return null
   }
 
-  const urlMode = new URLSearchParams(window.location.search).get('mode') as 'chat' | 'terminal' | null
-  const currentMode = urlMode || session?.mode || user.preferences.uiMode
+  const currentPath = location.pathname
+  const isTerminal = currentPath === '/terminal'
+  const currentMode = isTerminal ? 'terminal' : 'chat'
 
   const handleModeSwitch = (mode: UiMode) => {
     if (mode === currentMode) return
     
-    switchMode(mode)
-    
-    if (session) {
-      setSession({ ...session, mode })
+    if (mode === 'terminal') {
+      navigate('/terminal')
+    } else {
+      navigate('/chat')
     }
   }
 
@@ -45,7 +47,7 @@ export function ModeSwitcher() {
         {user.allowedModes.includes('chat') && (
           <button
             onClick={() => handleModeSwitch('chat')}
-            className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-accent ${
+            className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-muted ${
               currentMode === 'chat' ? 'text-foreground' : 'text-muted-foreground'
             }`}
           >
@@ -56,7 +58,7 @@ export function ModeSwitcher() {
         {user.allowedModes.includes('terminal') && (
           <button
             onClick={() => handleModeSwitch('terminal')}
-            className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-accent ${
+            className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm text-left hover:bg-muted ${
               currentMode === 'terminal' ? 'text-foreground' : 'text-muted-foreground'
             }`}
           >

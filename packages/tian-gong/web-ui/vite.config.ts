@@ -14,8 +14,8 @@ export default defineConfig({
         './TerminalApp': './src/apps/terminal/TerminalApp.tsx',
       },
       remotes: {
-        chat: 'http://localhost:3002/assets/remoteEntry.js',
-        terminal: 'http://localhost:3003/assets/remoteEntry.js',
+        chat: 'http://localhost:3001/assets/remoteEntry.js',
+        terminal: 'http://localhost:3002/assets/remoteEntry.js',
       },
       shared: ['react', 'react-dom', 'zustand'],
     }),
@@ -29,11 +29,11 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:4000',
+        target: 'http://localhost:3000',
         changeOrigin: true,
       },
       '/ws': {
-        target: 'ws://localhost:4000',
+        target: 'ws://localhost:3000',
         ws: true,
       },
     },

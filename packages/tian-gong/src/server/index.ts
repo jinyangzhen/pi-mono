@@ -6,7 +6,7 @@
  * - Web Mode: Chat-based UI using pi-web-ui components
  */
 
-import { getProviders } from "@mariozechner/pi-ai";
+import { getEnvApiKey, getModels, getProviders } from "@mariozechner/pi-ai";
 import express from "express";
 import { existsSync } from "fs";
 import { createServer } from "http";
@@ -196,7 +196,29 @@ export class TianGongServer {
 				name: providerLabels[provider] || provider,
 			}));
 
-			res.json({ providers: providersWithLabels });
+			// Get all models grouped by provider
+			const modelsByProvider: Record<string, Array<{ id: string; name: string }>> = {};
+			for (const provider of providers) {
+				const models = getModels(provider);
+				modelsByProvider[provider] = models.map((m) => ({ id: m.id, name: m.name }));
+			}
+
+			res.json({ providers: providersWithLabels, models: modelsByProvider });
+		});
+
+		// Get system API keys from environment variables (pi-ai detection)
+		this.app.get("/api/system/env-keys", (_req, res) => {
+			const providers = getProviders();
+			const envKeys: Record<string, string> = {};
+
+			for (const provider of providers) {
+				const key = getEnvApiKey(provider);
+				if (key) {
+					envKeys[provider] = key;
+				}
+			}
+
+			res.json({ apiKeys: envKeys });
 		});
 
 		// Get system API keys only
@@ -564,7 +586,7 @@ export class TianGongServer {
 		this.server.listen(cfg.port, cfg.host, () => {
 			console.log(`
 ╔══════════════════════════════════════════════════════════════╗
-║           TianGong Agent Server                        ║
+║           TianGong Agent Server                              ║
 ╠══════════════════════════════════════════════════════════════╣
 ║  Server running at http://${cfg.host}:${cfg.port}
 ║  

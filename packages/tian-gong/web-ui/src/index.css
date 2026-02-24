@@ -277,7 +277,7 @@
     width: 100%;
     max-width: 28rem;
     max-height: 85vh;
-    overflow: hidden;
+    overflow: visible;
     border-radius: 0;
   }
 
@@ -308,7 +308,7 @@
     position: absolute;
     z-index: 50;
     min-width: 8rem;
-    overflow: hidden;
+    overflow: visible;
     border: 1px solid var(--border);
     background: var(--card);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
