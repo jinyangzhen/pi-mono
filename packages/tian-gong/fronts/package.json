@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "check": "tsc --noEmit",
     "build:chat": "vite build --config vite.config.chat.ts",
-    "build:terminal": "vite build --config vite.config.terminal.ts"
+    "build:terminal": "vite build --config vite.config.terminal.ts",
+    "dev:chat": "vite --config vite.config.chat.ts",
+    "dev:terminal": "vite --config vite.config.terminal.ts"
   },
   "dependencies": {
     "@mariozechner/mini-lit": "^0.2.0",
