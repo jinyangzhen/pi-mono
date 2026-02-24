@@ -1,5 +1,5 @@
 {
-  "name": "@mariozechner/tian-gong-web-ui",
+  "name": "@mariozechner/tian-gong-fronts",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,10 +9,7 @@
     "preview": "vite preview",
     "check": "tsc --noEmit",
     "build:chat": "vite build --config vite.config.chat.ts",
-    "build:terminal": "vite build --config vite.config.terminal.ts",
-    "dev:chat": "vite --config vite.config.chat.ts",
-    "dev:terminal": "vite --config vite.config.terminal.ts",
-    "dev:all": "npm-run-all --parallel dev dev:chat dev:terminal"
+    "build:terminal": "vite build --config vite.config.terminal.ts"
   },
   "dependencies": {
     "@mariozechner/mini-lit": "^0.2.0",
@@ -33,7 +30,6 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.3",
     "autoprefixer": "^10.4.20",
-    "npm-run-all": "^4.1.5",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.3",

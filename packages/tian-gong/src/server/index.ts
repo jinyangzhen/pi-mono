@@ -74,8 +74,8 @@ export class TianGongServer {
 	private setupMiddleware(): void {
 		this.app.use(express.json());
 
-		// Serve static files - check for web-ui dist in dist folder
-		const webUiDist = join(__dirname, "..", "web-ui");
+		// Serve static files - check for fronts dist in dist folder
+		const webUiDist = join(__dirname, "..", "fronts");
 		const publicDir = join(__dirname, "public");
 
 		// Use web-ui dist if it exists, otherwise fall back to public
