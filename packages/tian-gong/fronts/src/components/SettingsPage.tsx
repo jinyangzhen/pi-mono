@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Eye, EyeOff, ArrowLeft, Trash2, ChevronDown, Plus, Copy, Check } from 'lucide-react'
-import { useProviders } from '../../hooks/useProviders'
+import { useProviders } from '../hooks/useProviders'
 
 interface SettingsPageProps {
   onBack: () => void
