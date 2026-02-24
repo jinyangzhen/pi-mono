@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Eye, EyeOff, ArrowLeft, Trash2, ChevronDown, Plus, Copy, Check } from 'lucide-react'
+import { useProviders } from '../../hooks/useProviders'
 
 interface SettingsPageProps {
   onBack: () => void
@@ -17,11 +18,11 @@ const maskKey = (key: string): string => {
 }
 
 export default function SettingsPage({ onBack }: SettingsPageProps) {
+  const { providers } = useProviders()
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({})
   const [systemApiKeys, setSystemApiKeys] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({})
-  const [providers, setProviders] = useState<Provider[]>([])
   const [activeSection, setActiveSection] = useState<'api-keys'>('api-keys')
   const [showAddProvider, setShowAddProvider] = useState(false)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
@@ -42,7 +43,6 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
   useEffect(() => {
     fetchApiKeys()
     fetchSystemApiKeys()
-    fetchProviders()
   }, [])
 
   const fetchApiKeys = async () => {
@@ -67,16 +67,7 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
     }
   }
 
-  const fetchProviders = async () => {
-    try {
-      const res = await fetch('/api/providers')
-      if (!res.ok) throw new Error('Failed to fetch providers')
-      const data = await res.json()
-      setProviders(data.providers || [])
-    } catch (error) {
-      console.error('Failed to fetch providers:', error)
-    }
-  }
+
 
   const handleSave = async () => {
     setSaving(true)

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Eye, EyeOff, X, Trash2, ChevronDown, Plus } from 'lucide-react'
+import { useProviders } from '../hooks/useProviders'
 
 interface SettingsDialogProps {
   open: boolean
@@ -22,7 +23,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [systemApiKeys, setSystemApiKeys] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({})
-  const [providers, setProviders] = useState<Provider[]>([])
+  const { providers } = useProviders()
   const [activeSection, setActiveSection] = useState<'api-keys'>('api-keys')
   const [showAddProvider, setShowAddProvider] = useState(false)
 
@@ -43,7 +44,6 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     if (open) {
       fetchApiKeys()
       fetchSystemApiKeys()
-      fetchProviders()
     }
   }, [open])
 
@@ -69,16 +69,7 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     }
   }
 
-  const fetchProviders = async () => {
-    try {
-      const res = await fetch('/api/providers')
-      if (!res.ok) throw new Error('Failed to fetch providers')
-      const data = await res.json()
-      setProviders(data.providers || [])
-    } catch (error) {
-      console.error('Failed to fetch providers:', error)
-    }
-  }
+
 
   const handleSave = async () => {
     setSaving(true)

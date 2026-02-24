@@ -16,6 +16,7 @@ import { fileURLToPath } from "url";
 import { WebSocket, WebSocketServer } from "ws";
 import { agentRunner } from "../core/agent-runner.js";
 import { ConfigManager, TASK_TEMPLATES, UserPreferencesManager } from "../core/config.js";
+import { userSettingsDB } from "../db/user-settings.js";
 import type { TianTask, TianUser, UserPreferences, WSMessage } from "../core/types.js";
 
 // ESM __dirname equivalent
@@ -141,6 +142,32 @@ export class TianGongServer {
 			}
 
 			res.json({ apiKeys: merged, providers: Object.keys(merged) });
+		});
+
+		// Get user settings from database
+		this.app.get("/api/me/settings", async (req, res) => {
+			try {
+				const settings = await userSettingsDB.getByUserId(req.user!.id);
+				if (!settings) {
+					return res.json({ userId: req.user!.id, apiKeys: {} });
+				}
+				res.json({ userId: settings.user_id, apiKeys: settings.api_keys });
+			} catch (error) {
+				console.error("Failed to get user settings:", error);
+				res.status(500).json({ error: "Failed to get user settings" });
+			}
+		});
+
+		// Update user settings in database
+		this.app.put("/api/me/settings", async (req, res) => {
+			try {
+				const { apiKeys } = req.body as { apiKeys?: Record<string, string> };
+				const settings = await userSettingsDB.upsert(req.user!.id, apiKeys || {});
+				res.json({ userId: settings.user_id, apiKeys: settings.api_keys });
+			} catch (error) {
+				console.error("Failed to update user settings:", error);
+				res.status(500).json({ error: "Failed to update user settings" });
+			}
 		});
 
 		// Get available LLM providers
