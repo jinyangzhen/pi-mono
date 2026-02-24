@@ -17,7 +17,7 @@ import { TianGongServer } from "../server/index.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const VERSION = "0.1.0";
-const BANNER = readFileSync(resolve(__dirname, "banner.txt"), "utf-8").replace(String.raw`${VERSION}`, VERSION);
+const BANNER = readFileSync(resolve(__dirname, "banner.txt"), "utf-8");
 
 const program = new Command();
 
