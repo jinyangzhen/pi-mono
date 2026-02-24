@@ -16,9 +16,8 @@ import { TianGongServer } from "../server/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const BANNER = readFileSync(resolve(__dirname, "banner.txt"), "utf-8");
-
 const VERSION = "0.1.0";
+const BANNER = readFileSync(resolve(__dirname, "banner.txt"), "utf-8").replace(String.raw`${VERSION}`, VERSION);
 
 const program = new Command();
 
@@ -40,18 +39,7 @@ program
 	.option("-w, --workspace <dir>", "Default workspace directory", process.cwd())
 	.option("--no-persist", "Disable session persistence")
 	.action(async (options) => {
-		console.log(
-			chalk.red.bold(`
-╔══════════════════════════════════════════════════════════════╗
-║ ${BANNER.split("\n").join("\n║ ")}
-║                                                              ║
-║           天工 (TianGong) Agent Platform v${VERSION}           ║
-║                                                              ║
-║   "The Exploitation of the Works of Nature"                 ║
-║           —— 天工开物 (1637)                                  ║
-╚══════════════════════════════════════════════════════════════╝
-		`),
-		);
+		console.log(chalk.red.bold(BANNER));
 
 		// Update config from CLI options
 		const config = new ConfigManager();
