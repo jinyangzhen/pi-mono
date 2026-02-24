@@ -56,46 +56,54 @@ Users can switch between modes in Settings, or via URL:
 │  ┌───────────────────────────────────────────────────────────┐  │
 │  │                    Shell (Host)                         │  │
 │  │                   Module Federation                       │  │
-│  │  - Routing & Navigation                                   │  │
-│  │  - Authentication & Session Mgmt                          │  │
-│  │  - Mode Selection (?mode=chat|terminal)                   │  │
-│  │  - Deep Linking & URL Params                             │  │
-│  │  - Role-Based Access Control                             │  │
+│  │  - React Router (client-side)                           │  │
+│  │  - Auth & Session Stores (Zustand)                     │  │
+│  │  - Mode Selection (?mode=chat|terminal)                 │  │
+│  │  - Deep Linking & URL Params                           │  │
+│  │  - Role-Based Access Control                           │  │
 │  └───────────────────────────────────────────────────────────┘  │
 │                              │                                  │
 │         ┌────────────────────┴────────────────────┐            │
 │         ▼                                         ▼            │
 │  ┌──────────────────┐                  ┌───────────────────┐  │
 │  │  Chat Remote     │                  │  Terminal Remote   │  │
-│  │  (pi-web-ui)     │                  │  (xterm.js)        │  │
+│  │  (React App)    │                  │  (xterm.js)       │  │
 │  │                  │                  │                   │  │
 │  │  Friendly UI     │                  │  Full pi TUI       │  │
 │  │  for citizens    │                  │  for engineers     │  │
 │  └──────────────────┘                  └───────────────────┘  │
 └─────────────────────────────────────────────────────────────────┘
                               │
-                              │ WebSocket
+                              │ HTTP / WebSocket
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Tian-gong Server                            │
-│                                                                 │
+│                     Tian-gong Server                             │
 │  ┌──────────────────────────────────────────────────────────┐  │
-│  │              pi-coding-agent SDK                          │  │
-│  │  - AgentSession management                                │  │
-│  │  - Tool execution                                         │  │
-│  │  - Session persistence                                    │  │
-│  │  - Extension system                                       │  │
+│  │              Express + SPA Fallback                        │  │
+│  │  - Static file serving (web-ui dist)                     │  │
+│  │  - API endpoints (/api/*)                                │  │
+│  │  - WebSocket handler (/ws)                               │  │
+│  │  - SPA fallback (returns index.html for non-API routes)  │  │
 │  └──────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │              Custom Tools Framework                       │  │
-│  │  - Policy/Claims tools (example)                         │  │
-│  │  - Document generation                                    │  │
-│  │  - Reporting & analytics                                  │  │
-│  │  - Build your own!                                        │  │
-│  └──────────────────────────────────────────────────────────┘  │
+│                              │                                  │
+│  ┌───────────────────────────┴─────────────────────────────┐   │
+│  │              pi-coding-agent SDK                         │   │
+│  │  - AgentSession management                              │   │
+│  │  - Tool execution                                       │   │
+│  │  - Session persistence                                  │   │
+│  └────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+**Request Flow:**
+```
+GET /terminal
+  → Express serves index.html (SPA fallback)
+  → React Router matches /terminal
+  → Loads Terminal Remote via Module Federation
+  → Terminal connects to WebSocket (/ws?session=...&mode=tui)
+```
+
 
 ## Deep Linking
 
