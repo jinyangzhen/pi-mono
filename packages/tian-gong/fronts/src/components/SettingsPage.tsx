@@ -6,12 +6,6 @@ interface SettingsPageProps {
   onBack: () => void
 }
 
-interface Provider {
-  id: string
-  name: string
-}
-
-
 const maskKey = (key: string): string => {
   if (!key || key.length <= 4) return key
   return key.slice(0, 4) + '•'.repeat(key.length - 4)

@@ -14,8 +14,8 @@ export default defineConfig({
         './TerminalApp': './src/apps/terminal/TerminalApp.tsx',
       },
       remotes: {
-        chat: 'http://localhost:3001/assets/remoteEntry.js',
-        terminal: 'http://localhost:3002/assets/remoteEntry.js',
+        chat: 'http://localhost:3001/remoteEntry.js',
+        terminal: 'http://localhost:3002/remoteEntry.js',
       },
       shared: ['react', 'react-dom', 'zustand'],
     }),
@@ -37,6 +37,7 @@ export default defineConfig({
         ws: true,
       },
     },
+    middlewareMode: false,
   },
   build: {
     outDir: 'dist',

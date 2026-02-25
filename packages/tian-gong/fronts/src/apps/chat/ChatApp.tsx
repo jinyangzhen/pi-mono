@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Paperclip, Trash2, Plus, ChevronDown, Bot, User, Loader2 } from 'lucide-react'
 import { AppProps } from '../../shared/types'
-import { useChatStore, type ChatModel } from '../../stores/chatStore'
+import { useChatStore } from '../../stores/chatStore'
 
 interface Provider {
   id: string
@@ -221,11 +221,12 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
             </div>
             </div>
           </div>
-        <div className="flex items-center gap-1">
-          <button className="btn btn-sm btn-ghost">
-            <Trash2 className="w-4 h-4" />
-          </button>
         </div>
+          <div className="flex items-center gap-1">
+            <button className="btn btn-sm btn-ghost">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
