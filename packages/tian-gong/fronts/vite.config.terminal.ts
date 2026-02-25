@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     federation({
-      name: 'terminal_remote',
+      name: 'terminal',
       filename: 'remoteEntry.js',
       exposes: {
         './TerminalApp': './src/apps/terminal/TerminalApp.tsx',
@@ -23,6 +23,7 @@ export default defineConfig({
   },
   server: {
     port: 3002,
+    cors: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -36,6 +37,7 @@ export default defineConfig({
   },
   preview: {
     port: 3002,
+    cors: true,
   },
   build: {
     outDir: 'dist-terminal',
@@ -44,9 +46,9 @@ export default defineConfig({
     minify: false,
     modulePreload: false,
     rollupOptions: {
-      input: {
-        index: path.resolve(__dirname, 'terminal.html'),
-      },
+      input: [],
+      // Only build federation artifacts, no HTML entry needed
+      preserveEntrySignatures: 'strict',
     },
   },
 })

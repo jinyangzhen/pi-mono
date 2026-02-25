@@ -35,6 +35,9 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [providers, setProviders] = useState<Provider[]>([])
   const [models, setModels] = useState<Record<string, Model[]>>({})
+  
+  // Track current session ID
+  const [sessionId, setSessionId] = useState<string | undefined>(initialSessionId)
 
   const selectedModel = useChatStore(state => state.selectedModel)
   const setSelectedModel = useChatStore(state => state.setSelectedModel)
@@ -51,6 +54,20 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+  
+  // Initialize or restore session ID on mount
+  useEffect(() => {
+    if (!sessionId) {
+      const storedSessionId = localStorage.getItem('tian_session_id')
+      if (storedSessionId) {
+        setSessionId(storedSessionId)
+        onSessionChange?.(storedSessionId)
+      }
+    } else {
+      // Store session ID in localStorage
+      localStorage.setItem('tian_session_id', sessionId)
+    }
+  }, [sessionId, onSessionChange])
   
   // Fetch providers and models on mount
   useEffect(() => {
@@ -140,7 +157,13 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
           : msg
       ))
       
-      onSessionChange?.(initialSessionId || crypto.randomUUID())
+      // Create new session if none exists
+      if (!sessionId) {
+        const newSessionId = crypto.randomUUID()
+        setSessionId(newSessionId)
+        localStorage.setItem('tian_session_id', newSessionId)
+        onSessionChange?.(newSessionId)
+      }
     } catch (error) {
       setMessages(prev => prev.map(msg => 
         msg.id === assistantMessage.id 
@@ -162,6 +185,11 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
   const handleNewChat = () => {
     setMessages([])
     setInput('')
+    // Create new session for new chat
+    const newSessionId = crypto.randomUUID()
+    setSessionId(newSessionId)
+    localStorage.setItem('tian_session_id', newSessionId)
+    onSessionChange?.(newSessionId)
   }
 
   const formatTime = (date: Date) => {

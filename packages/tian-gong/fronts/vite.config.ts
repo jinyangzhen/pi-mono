@@ -9,13 +9,9 @@ export default defineConfig({
     federation({
       name: 'tian_gong_host',
       filename: 'remoteEntry.js',
-      exposes: {
-        './ChatApp': './src/apps/chat/ChatApp.tsx',
-        './TerminalApp': './src/apps/terminal/TerminalApp.tsx',
-      },
       remotes: {
-        chat: 'http://localhost:3001/remoteEntry.js',
-        terminal: 'http://localhost:3002/remoteEntry.js',
+        chat: 'http://localhost:3001/assets/remoteEntry.js',
+        terminal: 'http://localhost:3002/assets/remoteEntry.js',
       },
       shared: ['react', 'react-dom', 'zustand'],
     }),
@@ -27,6 +23,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    cors: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -37,11 +34,26 @@ export default defineConfig({
         ws: true,
       },
     },
-    middlewareMode: false,
+  },
+  preview: {
+    port: 3000,
+    cors: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/ws': {
+        target: 'ws://localhost:5000',
+        ws: true,
+      },
+    },
   },
   build: {
     outDir: 'dist',
     sourcemap: true,
     target: 'esnext',
+    minify: false,
+    modulePreload: false,
   },
 })

@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     federation({
-      name: 'chat_remote',
+      name: 'chat',
       filename: 'remoteEntry.js',
       exposes: {
         './ChatApp': './src/apps/chat/ChatApp.tsx',
@@ -23,6 +23,7 @@ export default defineConfig({
   },
   server: {
     port: 3001,
+    cors: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -36,6 +37,7 @@ export default defineConfig({
   },
   preview: {
     port: 3001,
+    cors: true,
   },
   build: {
     outDir: 'dist-chat',
@@ -44,9 +46,9 @@ export default defineConfig({
     minify: false,
     modulePreload: false,
     rollupOptions: {
-      input: {
-        index: path.resolve(__dirname, 'chat.html'),
-      },
+      input: [],
+      // Only build federation artifacts, no HTML entry needed
+      preserveEntrySignatures: 'strict',
     },
   },
 })

@@ -622,3 +622,145 @@ curl http://localhost:3000/api/me
 - [ ] WebSocket connects with session
 - [ ] No static HTML files used
 - [ ] TypeScript compiles without errors
+
+---
+
+## Lessons Learned
+
+### Module Federation with @originjs/vite-plugin-federation
+
+#### 1. Bootstrap Pattern is REQUIRED
+
+**Problem**: Direct federation imports like `lazy(() => import('chat/ChatApp'))` fail during Vite's import analysis phase.
+
+**Solution**: Use the bootstrap pattern:
+```
+src/main.tsx     → import('./bootstrap')  // Just imports bootstrap
+src/bootstrap.tsx → Contains actual app with federation imports
+```
+
+**Why**: Vite analyzes imports before the federation plugin can resolve them. The dynamic `import('./bootstrap')` delays resolution until federation is ready.
+
+#### 2. Dev Mode Does NOT Support Federation
+
+**Problem**: Running `vite` (dev mode) cannot load remote apps - you get 404 or "Failed to resolve import" errors.
+
+**Solution**: All apps must be **built** and served via **preview**:
+```json
+{
+  "scripts": {
+    "build:remotes": "npm run build:chat && npm run build:terminal",
+    "build:all": "npm run build:remotes && npm run build:host",
+    "dev:all": "npm run build:all && concurrently \"vite preview --port 3000\" \"vite preview --config vite.config.chat.ts\" \"vite preview --config vite.config.terminal.ts\""
+  }
+}
+```
+
+**Why**: `@originjs/vite-plugin-federation` generates `remoteEntry.js` during build, not during dev. Preview servers serve the built artifacts.
+
+#### 3. Remote Entry Path Must Match Built Output
+
+**Problem**: Configuring `remotes: { chat: 'http://localhost:3001/remoteEntry.js' }` returns 404.
+
+**Solution**: The remote entry is built to `assets/remoteEntry.js`:
+```typescript
+// vite.config.ts (host)
+remotes: {
+  chat: 'http://localhost:3001/assets/remoteEntry.js',
+  terminal: 'http://localhost:3002/assets/remoteEntry.js',
+}
+```
+
+#### 4. Remote Config Needs Empty Input Array
+
+**Problem**: Building remotes fails with "Failed to resolve import 'chat/ChatApp'".
+
+**Solution**: Exclude entry files from remote builds:
+```typescript
+// vite.config.chat.ts
+build: {
+  outDir: 'dist-chat',
+  rollupOptions: {
+    input: [],  // Only build federation artifacts, no HTML entry
+    preserveEntrySignatures: 'strict',
+  },
+}
+```
+
+**Why**: Without `input: []`, Vite tries to bundle all entry points including the host's bootstrap.tsx which contains federation imports.
+
+#### 5. CORS Required for Cross-Origin Federation
+
+**Problem**: Browser blocks remoteEntry.js requests due to CORS.
+
+**Solution**: Enable CORS on all servers:
+```typescript
+server: { cors: true },
+preview: { cors: true },
+```
+
+### Session ID URL Sync
+
+#### Problem: Session ID Not in URL
+
+The `onSessionChange` callback was passed to components but not used to update URL.
+
+**Solution**: Route components handle URL sync:
+```tsx
+function ChatRoute() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  
+  const handleSessionChange = useCallback((newSessionId: string) => {
+    const newSearchParams = new URLSearchParams(searchParams)
+    newSearchParams.set('session', newSessionId)
+    setSearchParams(newSearchParams, { replace: true })
+  }, [searchParams, setSearchParams])
+
+  // Initialize from localStorage if not in URL
+  useEffect(() => {
+    if (!searchParams.has('session')) {
+      const storedSessionId = localStorage.getItem('tian_session_id')
+      if (storedSessionId) {
+        const newSearchParams = new URLSearchParams(searchParams)
+        newSearchParams.set('session', storedSessionId)
+        setSearchParams(newSearchParams, { replace: true })
+      }
+    }
+  }, [searchParams, setSearchParams])
+
+  return <ChatApp onSessionChange={handleSessionChange} />
+}
+```
+
+### Architecture Summary
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Development Setup                         │
+│                                                              │
+│  Port 3000 (Host)     → vite preview (serves dist/)         │
+│  Port 3001 (Chat)     → vite preview (serves dist-chat/)    │
+│  Port 3002 (Terminal) → vite preview (serves dist-terminal/)│
+│                                                              │
+│  All must be BUILT first, then served via preview           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Files Reference
+
+| File | Purpose |
+|------|--------|
+| `src/main.tsx` | Bootstrap entry - just `import('./bootstrap')` |
+| `src/bootstrap.tsx` | App logic with federation imports |
+| `vite.config.ts` | Host config - consumes remotes |
+| `vite.config.chat.ts` | Chat remote - exposes ChatApp |
+| `vite.config.terminal.ts` | Terminal remote - exposes TerminalApp |
+| `src/types/federation.d.ts` | TypeScript declarations for federation imports |
+
+### Common Pitfalls
+
+1. **Forgetting to build**: Always run `npm run build:all` before `dev:all`
+2. **Wrong remote path**: Check `dist-*/assets/remoteEntry.js` location
+3. **Missing bootstrap**: Direct federation imports fail without bootstrap pattern
+4. **Missing CORS**: Cross-origin requests blocked without `cors: true`
+5. **Input not empty**: Remote builds fail if `rollupOptions.input` not set to `[]`
