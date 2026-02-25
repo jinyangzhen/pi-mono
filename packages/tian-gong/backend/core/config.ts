@@ -25,10 +25,7 @@ export const DEFAULT_CONFIG: TianConfig = {
 		maxPerUser: 5,
 		persist: true,
 	},
-	apiKeys: [
-		{ provider: "openai", apiKey: "sk-system-openai-xxxx" },
-		{ provider: "anthropic", apiKey: "sk-system-anthropic-xxxx" },
-	],
+	apiKeys: [],
 	security: {
 		auditLogging: true,
 		rateLimit: 100,
