@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Paperclip, Trash2, Plus, ChevronDown, Bot, User, Loader2 } from 'lucide-react'
 import { AppProps } from '../../shared/types'
+import { useChatStore, type ChatModel } from '../../stores/chatStore'
 
 interface Provider {
   id: string
@@ -35,10 +36,10 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
   const [providers, setProviders] = useState<Provider[]>([])
   const [models, setModels] = useState<Record<string, Model[]>>({})
 
-  const [selectedProvider, setSelectedProvider] = useState<string>('openai')
-  const [selectedModel, setSelectedModel] = useState<string>('gpt-4o')
+  const selectedModel = useChatStore(state => state.selectedModel)
+  const setSelectedModel = useChatStore(state => state.setSelectedModel)
   const [showModelDropdown, setShowModelDropdown] = useState(false)
-  const [showProviderDropdown, setShowProviderDropdown] = useState(false)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -59,22 +60,23 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
         const data: ProvidersResponse = await response.json()
         setProviders(data.providers)
         setModels(data.models)
-        
-        // Set defaults based on available data
-        if (data.providers.length > 0) {
-          const firstProvider = data.providers[0].id
-          setSelectedProvider(firstProvider)
-          
-          if (data.models[firstProvider] && data.models[firstProvider].length > 0) {
-            setSelectedModel(data.models[firstProvider][0].id)
+        // Set default model if none selected
+        if (!selectedModel && data.providers.length > 0) {
+          const firstProvider = data.providers[0]
+          const firstModel = data.models[firstProvider.id]?.[0]
+          if (firstModel) {
+            setSelectedModel({
+              providerId: firstProvider.id,
+              providerName: firstProvider.name,
+              modelId: firstModel.id,
+              modelName: firstModel.name
+            })
           }
         }
       } catch (error) {
         console.error('Failed to fetch providers:', error)
-        // Keep default values if fetch fails
       }
     }
-    
     fetchProviders()
   }, [])
   
@@ -83,7 +85,7 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowModelDropdown(false)
-        setShowProviderDropdown(false)
+
       }
     }
     
@@ -91,22 +93,16 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
   
-  // Update selected model when provider changes
-  useEffect(() => {
-    if (models[selectedProvider] && models[selectedProvider].length > 0) {
-      setSelectedModel(models[selectedProvider][0].id)
+  // Get all available models across all providers
+  const getAllModels = (): Array<Model & { providerId: string; providerName: string }> => {
+    const allModels: Array<Model & { providerId: string; providerName: string }> = []
+    for (const provider of providers) {
+      const providerModels = models[provider.id] || []
+      for (const model of providerModels) {
+        allModels.push({ ...model, providerId: provider.id, providerName: provider.name })
+      }
     }
-  }, [selectedProvider, models])
-  
-  const getProviderName = (providerId: string) => {
-    const provider = providers.find(p => p.id === providerId)
-    return provider?.name || providerId
-  }
-  
-  const getModelName = (modelId: string) => {
-    const providerModels = models[selectedProvider] || []
-    const model = providerModels.find(m => m.id === modelId)
-    return model?.name || modelId
+    return allModels
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,7 +132,7 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
     try {
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      const responseText = `I'm Tian-gong Agent (Model: ${getModelName(selectedModel)}), an AI assistant. How can I help you today?`
+      const responseText = `I'm Tian-gong Agent (Model: ${selectedModel?.modelName || 'Unknown'}), an AI assistant. How can I help you today?`
       
       setMessages(prev => prev.map(msg => 
         msg.id === assistantMessage.id 
@@ -191,62 +187,37 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => setShowProviderDropdown(!showProviderDropdown)}
-                  className="flex items-center gap-1.5 px-2 py-1 hover:bg-accent rounded transition-colors"
-                >
-                  <Bot className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">{getProviderName(selectedProvider)}</span>
-                  <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${showProviderDropdown ? 'rotate-180' : ''}`} />
-                </button>
-                {showProviderDropdown && (
-                  <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[150px]">
-                    {providers.map(provider => (
-                      <button
-                        key={provider.id}
-                        onClick={() => {
-                          setSelectedProvider(provider.id)
-                          setShowProviderDropdown(false)
-                        }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-                          selectedProvider === provider.id ? 'bg-accent' : ''
-                        }`}
-                      >
-                        {provider.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              <div className="h-4 w-px bg-border" />
-              <div className="flex items-center gap-1.5">
-                <button
                   onClick={() => setShowModelDropdown(!showModelDropdown)}
                   className="flex items-center gap-1.5 px-2 py-1 hover:bg-accent rounded transition-colors"
                 >
-                  <span className="text-sm text-foreground">{getModelName(selectedModel)}</span>
+                  <Bot className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-foreground">{selectedModel?.modelName || 'Select model'}</span>
                   <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
                 </button>
-                
                 {showModelDropdown && (
-                  <div className="absolute top-full right-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
-                    {(models[selectedProvider] || []).map(model => (
+                  <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
+                    {getAllModels().map(model => (
                       <button
-                        key={model.id}
+                        key={`${model.providerId}-${model.id}`}
                         onClick={() => {
-                          setSelectedModel(model.id)
+                          setSelectedModel({
+                            providerId: model.providerId,
+                            providerName: model.providerName,
+                            modelId: model.id,
+                            modelName: model.name
+                          })
                           setShowModelDropdown(false)
                         }}
                         className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-                          selectedModel === model.id ? 'bg-accent' : ''
+                          selectedModel?.modelId === model.id && selectedModel?.providerId === model.providerId ? 'bg-accent' : ''
                         }`}
                       >
-                        {model.name}
+                        <div className="font-medium">{model.name}</div>
+                        <div className="text-xs text-muted-foreground">{model.providerName}</div>
                       </button>
                     ))}
                   </div>
                 )}
-              </div>
             </div>
             </div>
           </div>
