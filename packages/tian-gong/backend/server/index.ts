@@ -38,6 +38,7 @@ interface TerminalSession {
 	metadata: {
 		taskName?: string;
 		workspaceDir: string;
+		selectedModel?: any;
 	};
 }
 
@@ -119,29 +120,11 @@ export class TianGongServer {
 			res.json(updated);
 		});
 
-		// Get merged API keys (system + user overrides)
-		this.app.get("/api/me/api-keys", (req, res) => {
-			const userPrefs = this.userPrefs.load(req.user!.id);
-			const systemConfig = this.config.get();
-
-			// Start with system API keys
-			const merged: Record<string, string> = {};
-			if (systemConfig.apiKeys) {
-				for (const key of systemConfig.apiKeys) {
-					merged[key.provider] = key.apiKey;
-				}
-			}
-
-			// User keys override system keys
-			if (userPrefs.apiKeys) {
-				for (const [provider, apiKey] of Object.entries(userPrefs.apiKeys)) {
-					if (apiKey) {
-						merged[provider] = apiKey;
-					}
-				}
-			}
-
-			res.json({ apiKeys: merged, providers: Object.keys(merged) });
+		// Get user API keys only
+		this.app.get("/api/me/api-keys", async (req, res) => {
+			const userSettings = await userSettingsDB.getByUserId(req.user!.id);
+			const userKeys = userSettings?.api_keys || {};
+			res.json({ apiKeys: userKeys, providers: Object.keys(userKeys) });
 		});
 
 		// Get user settings from database
@@ -170,9 +153,10 @@ export class TianGongServer {
 			}
 		});
 
-		// Get available LLM providers
-		this.app.get("/api/providers", (_req, res) => {
-			const providers = getProviders();
+		// Get available LLM providers - merged from system and user API keys
+		this.app.get("/api/providers", async (req, res) => {
+			// Get all providers from pi-ai
+			const allProviders = getProviders();
 			const providerLabels = {
 				"amazon-bedrock": "AWS Bedrock",
 				anthropic: "Anthropic",
@@ -198,19 +182,79 @@ export class TianGongServer {
 				"kimi-coding": "Kimi Coding",
 			} as Record<string, string>;
 
-			const providersWithLabels = providers.map((provider) => ({
+			// Get system API keys (from environment variables)
+			const systemKeys: Record<string, string> = {};
+			for (const provider of allProviders) {
+				const key = getEnvApiKey(provider);
+				if (key) {
+					systemKeys[provider] = key;
+				}
+			}
+
+			// Get user API keys from database
+			const userSettings = await userSettingsDB.getByUserId(req.user!.id);
+			const userKeys = userSettings?.api_keys || {};
+
+			// Merge providers: user keys override system keys
+			const availableProviders = new Set<string>();
+			for (const provider of allProviders) {
+				// Provider is available if it has system key OR user key
+				if (systemKeys[provider] || userKeys[provider]) {
+					availableProviders.add(provider);
+				}
+			}
+
+
+
+			const providersWithLabels = Array.from(availableProviders).map((provider) => ({
 				id: provider,
 				name: providerLabels[provider] || provider,
 			}));
 
-			// Get all models grouped by provider
+			// Get all models grouped by provider (only for available providers)
 			const modelsByProvider: Record<string, Array<{ id: string; name: string }>> = {};
-			for (const provider of providers) {
-				const models = getModels(provider);
+			for (const provider of availableProviders) {
+				const models = getModels(provider as any);
 				modelsByProvider[provider] = models.map((m) => ({ id: m.id, name: m.name }));
 			}
 
 			res.json({ providers: providersWithLabels, models: modelsByProvider });
+		});
+
+		// Get ALL available LLM providers from pi-ai (for Settings page to add new providers)
+		this.app.get("/api/providers/all", (_req, res) => {
+			const allProviders = getProviders();
+			const providerLabels = {
+				"amazon-bedrock": "AWS Bedrock",
+				anthropic: "Anthropic",
+				google: "Google",
+				"google-gemini-cli": "Google Gemini CLI",
+				"google-antigravity": "Google Antigravity",
+				"google-vertex": "Google Vertex AI",
+				openai: "OpenAI",
+				"azure-openai-responses": "Azure OpenAI",
+				"openai-codex": "OpenAI Codex",
+				"github-copilot": "GitHub Copilot",
+				xai: "xAI",
+				groq: "Groq",
+				cerebras: "Cerebras",
+				openrouter: "OpenRouter",
+				"vercel-ai-gateway": "Vercel AI Gateway",
+				zai: "Zai",
+				mistral: "Mistral",
+				minimax: "MiniMax",
+				"minimax-cn": "MiniMax CN",
+				huggingface: "HuggingFace",
+				opencode: "OpenCode",
+				"kimi-coding": "Kimi Coding",
+			} as Record<string, string>;
+
+			const providersWithLabels = allProviders.map((provider) => ({
+				id: provider,
+				name: providerLabels[provider] || provider,
+			}));
+
+			res.json({ providers: providersWithLabels });
 		});
 
 		// Get system API keys from environment variables (pi-ai detection)
@@ -242,13 +286,14 @@ export class TianGongServer {
 		});
 
 		// Update user API keys
-		this.app.put("/api/me/api-keys", (req, res) => {
+		this.app.put("/api/me/api-keys", async (req, res) => {
 			const { apiKeys } = req.body as { apiKeys: Record<string, string> };
-			const userPrefs = this.userPrefs.load(req.user!.id);
 
-			// Merge with existing user preferences
-			userPrefs.apiKeys = { ...userPrefs.apiKeys, ...apiKeys };
-			this.userPrefs.save(req.user!.id, userPrefs);
+			// Get existing user settings and merge with new keys
+			const existingSettings = await userSettingsDB.getByUserId(req.user!.id);
+			const mergedApiKeys = apiKeys || {};
+
+			await userSettingsDB.upsert(req.user!.id, mergedApiKeys);
 
 			res.json({ success: true });
 		});
@@ -531,20 +576,32 @@ export class TianGongServer {
 			});
 
 		// Handle WebSocket messages
+		// Handle WebSocket messages
 		ws.on("message", async (data) => {
 			try {
 				const message = JSON.parse(data.toString()) as WSMessage;
 
 				switch (message.type) {
-					case "input":
-						await agentRunner.prompt(session.id, (message as any).payload.data);
+					case "input": {
+						const payload = (message as any).payload;
+						const prompt = payload.data;
+						const model = payload.model;
+						
+						// Store selected model in session metadata for future use
+						if (model) {
+							session.metadata.selectedModel = model;
+						}
+						
+						await agentRunner.prompt(session.id, prompt, model);
 						ws.send(JSON.stringify({ type: "message_complete", payload: { sessionId: session.id } }));
 						break;
+					}
 				}
 			} catch (error) {
 				console.error("WebSocket message error:", error);
 			}
 		});
+
 	}
 
 	// ============================================================================

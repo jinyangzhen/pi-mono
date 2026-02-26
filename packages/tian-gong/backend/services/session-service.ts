@@ -209,7 +209,7 @@ export class SessionService {
 			createdAt: session.created_at ?? null,
 			updatedAt: session.updated_at ?? null,
 			lastActiveAt: session.last_active_at ?? null,
-			messageCount: session.message_count,
+			messageCount: (session.message_count as number) || 0,
 		};
 	}
 }

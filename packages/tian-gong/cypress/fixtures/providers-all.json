@@ -1,0 +1,26 @@
+{
+  "providers": [
+    { "id": "amazon-bedrock", "name": "AWS Bedrock" },
+    { "id": "anthropic", "name": "Anthropic" },
+    { "id": "azure-openai-responses", "name": "Azure OpenAI" },
+    { "id": "cerebras", "name": "Cerebras" },
+    { "id": "github-copilot", "name": "GitHub Copilot" },
+    { "id": "google", "name": "Google" },
+    { "id": "google-antigravity", "name": "Google Antigravity" },
+    { "id": "google-gemini-cli", "name": "Google Gemini CLI" },
+    { "id": "google-vertex", "name": "Google Vertex AI" },
+    { "id": "groq", "name": "Groq" },
+    { "id": "huggingface", "name": "HuggingFace" },
+    { "id": "kimi-coding", "name": "Kimi Coding" },
+    { "id": "minimax", "name": "MiniMax" },
+    { "id": "minimax-cn", "name": "MiniMax CN" },
+    { "id": "mistral", "name": "Mistral" },
+    { "id": "openai", "name": "OpenAI" },
+    { "id": "openai-codex", "name": "OpenAI Codex" },
+    { "id": "opencode", "name": "OpenCode" },
+    { "id": "openrouter", "name": "OpenRouter" },
+    { "id": "vercel-ai-gateway", "name": "Vercel AI Gateway" },
+    { "id": "xai", "name": "xAI" },
+    { "id": "zai", "name": "Zai" }
+  ]
+}

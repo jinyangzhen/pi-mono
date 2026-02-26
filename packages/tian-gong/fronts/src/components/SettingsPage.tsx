@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
-import { Eye, EyeOff, ArrowLeft, Trash2, ChevronDown, Plus, Copy, Check } from 'lucide-react'
-import { useProviders } from '../hooks/useProviders'
+import { useState, useEffect, useRef } from 'react'
+import { ArrowLeft, Trash2, ChevronDown, Plus, Check, Eye, EyeOff, Pencil } from 'lucide-react'
+
+
+
 
 interface SettingsPageProps {
   onBack: () => void
@@ -12,15 +14,19 @@ const maskKey = (key: string): string => {
 }
 
 export default function SettingsPage({ onBack }: SettingsPageProps) {
-  const { providers } = useProviders()
+  const [allProviders, setAllProviders] = useState<Array<{ id: string; name: string }>>([])
   const [apiKeys, setApiKeys] = useState<Record<string, string>>({})
+
+
   const [systemApiKeys, setSystemApiKeys] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
+  const [saveSuccess, setSaveSuccess] = useState(false)
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({})
   const [activeSection, setActiveSection] = useState<'api-keys'>('api-keys')
   const [showAddProvider, setShowAddProvider] = useState(false)
-  const [copiedKey, setCopiedKey] = useState<string | null>(null)
-
+  const [editingKey, setEditingKey] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const providerLabels: Record<string, string> = {
     'openai-responses': 'OpenAI',
@@ -38,6 +44,27 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
     fetchApiKeys()
     fetchSystemApiKeys()
   }, [])
+
+  useEffect(() => {
+    if (editingKey && inputRefs.current[editingKey]) {
+      inputRefs.current[editingKey]?.focus()
+    }
+  }, [editingKey])
+
+  useEffect(() => {
+    fetchAllProviders()
+  }, [])
+
+  const fetchAllProviders = async () => {
+    try {
+      const res = await fetch('/api/providers/all')
+      if (!res.ok) throw new Error('Failed to fetch providers')
+      const data = await res.json()
+      setAllProviders(data.providers || [])
+    } catch (error) {
+      console.error('Failed to fetch providers:', error)
+    }
+  }
 
   const fetchApiKeys = async () => {
     try {
@@ -61,8 +88,6 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
     }
   }
 
-
-
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -72,7 +97,8 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
         body: JSON.stringify({ apiKeys })
       })
       if (!res.ok) throw new Error('Failed to save API keys')
-      onBack()
+      setSaveSuccess(true)
+      setTimeout(() => setSaveSuccess(false), 3000)
     } catch (error) {
       console.error('Failed to save API keys:', error)
     } finally {
@@ -84,31 +110,67 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
     setVisibleKeys(prev => ({ ...prev, [provider]: !prev[provider] }))
   }
 
-  const addProvider = (providerId: string) => {
-    setApiKeys(prev => ({ ...prev, [providerId]: '' }))
+  const startEditing = (providerId: string) => {
+    setEditingKey(providerId)
+    setEditValue(apiKeys[providerId] || '')
+  }
+
+  const stopEditing = () => {
+    if (editingKey) {
+      setApiKeys(prev => ({ ...prev, [editingKey]: editValue }))
+      setEditingKey(null)
+      setEditValue('')
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      stopEditing()
+    } else if (e.key === 'Escape') {
+      setEditingKey(null)
+      setEditValue('')
+    }
+  }
+
+  const addProvider = async (providerId: string) => {
+    const newKeys = { ...apiKeys, [providerId]: '' }
+    setApiKeys(newKeys)
     setShowAddProvider(false)
+    
+    try {
+      const res = await fetch('/api/me/api-keys', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKeys: newKeys })
+      })
+      if (!res.ok) throw new Error('Failed to add provider')
+    } catch (error) {
+      console.error('Failed to add provider:', error)
+    }
   }
 
-  const removeProvider = (providerId: string) => {
-    setApiKeys(prev => {
-      const newKeys = { ...prev }
-      delete newKeys[providerId]
-      return newKeys
-    })
-  }
-
-  const handleCopy = async (providerId: string) => {
-    const key = apiKeys[providerId]
-    if (key) {
-      await navigator.clipboard.writeText(key)
-      setCopiedKey(providerId)
-      setTimeout(() => setCopiedKey(null), 2000)
+  const removeProvider = async (providerId: string) => {
+    const newKeys = { ...apiKeys }
+    delete newKeys[providerId]
+    setApiKeys(newKeys)
+    
+    try {
+      const res = await fetch('/api/me/api-keys', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKeys: newKeys })
+      })
+      if (!res.ok) throw new Error('Failed to remove provider')
+    } catch (error) {
+      console.error('Failed to remove provider:', error)
     }
   }
 
   const systemProviders = Object.keys(systemApiKeys)
-  const availableProviders = providers
-
+  const userApiKeys = Object.keys(apiKeys).filter(key => !systemApiKeys[key])
+  // Filter out providers that are already configured (system or user level)
+  const configuredProviders = new Set([...systemProviders, ...userApiKeys])
+  const availableProviders = allProviders.filter(p => !configuredProviders.has(p.id))
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-4 p-4 border-b border-border">
@@ -208,15 +270,15 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                   )}
                 </div>
 
-                {Object.keys(apiKeys).length === 0 && availableProviders.length === 0 ? (
+                {userApiKeys.length === 0 && availableProviders.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground text-sm">
                     No API keys configured
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {Object.keys(apiKeys).map(providerId => {
-                      const isEditing = (window as any).__editingProviderId__ === providerId
+                    {userApiKeys.map(providerId => {
                       const hasValue = apiKeys[providerId] && apiKeys[providerId].trim().length > 0
+                      const isEditing = editingKey === providerId
                       
                       return (
                         <div
@@ -229,66 +291,52 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
                           
                           {isEditing ? (
                             <input
+                              ref={el => { inputRefs.current[providerId] = el }}
                               type="text"
-                              autoFocus
-                              value={apiKeys[providerId] || ''}
-                              onChange={e => setApiKeys(prev => ({ ...prev, [providerId]: e.target.value }))}
-                              onBlur={() => { (window as any).__editingProviderId__ = null }}
-                              onKeyDown={e => {
-                                if (e.key === 'Enter' || e.key === 'Escape') {
-                                  (window as any).__editingProviderId__ = null
-                                }
-                              }}
-                              className="flex-1 input input-xs"
-                              disabled={saving}
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              onBlur={stopEditing}
+                              onKeyDown={handleKeyDown}
+                              className="flex-1 input text-sm font-mono"
+                              placeholder="Enter API key"
                             />
                           ) : (
-                            <>
-                              <span className="flex-1 text-sm font-mono text-muted-foreground">
-                                {hasValue ? (visibleKeys[providerId] ? apiKeys[providerId] : maskKey(apiKeys[providerId])) : 'Click to set key'}
+                            <button
+                              onClick={() => startEditing(providerId)}
+                              className="flex-1 flex items-center gap-2 text-left text-sm font-mono text-muted-foreground hover:text-foreground transition-colors group/key"
+                              title="Click to edit"
+                            >
+                              <span className="truncate">
+                                {hasValue 
+                                  ? (visibleKeys[providerId] ? apiKeys[providerId] : maskKey(apiKeys[providerId])) 
+                                  : 'Click to set key'
+                                }
                               </span>
                               
-                              <div className="flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => toggleKeyVisibility(providerId)}
-                                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                                  title={visibleKeys[providerId] ? 'Hide' : 'Show'}
-                                >
-                                  {visibleKeys[providerId] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </button>
-                                
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopy(providerId)}
-                                  className="p-1 text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
-                                  title="Copy"
-                                >
-                                  {copiedKey === providerId ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                                </button>
-                                
-                                <button
-                                  type="button"
-                                  onClick={() => { (window as any).__editingProviderId__ = providerId }}
-                                  className="p-1 text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
-                                  title="Edit"
-                                >
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                  </svg>
-                                </button>
-                                
-                                <button
-                                  type="button"
-                                  onClick={() => removeProvider(providerId)}
-                                  className="p-1 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </>
+                              <Pencil className="w-3 h-3 opacity-0 group-hover/key:opacity-100 transition-opacity text-muted-foreground" />
+                            </button>
                           )}
+                          
+                          
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => toggleKeyVisibility(providerId)}
+                              className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                              title={visibleKeys[providerId] ? 'Hide' : 'Show'}
+                            >
+                              {visibleKeys[providerId] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                            
+                            <button
+                              type="button"
+                              onClick={() => removeProvider(providerId)}
+                              className="p-1 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       )
                     })}
@@ -300,7 +348,14 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 p-4 border-t border-border">
+
+      <div className="flex items-center gap-2 p-4 border-t border-border">
+        {saveSuccess && (
+          <span className="text-sm text-green-500 flex items-center gap-1">
+            <Check className="w-4 h-4" /> Saved successfully
+          </span>
+        )}
+        <div className="flex-1" />
         <button
           onClick={onBack}
           disabled={saving}

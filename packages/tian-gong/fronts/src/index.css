@@ -417,6 +417,9 @@
   .bg-primary { background: var(--primary); }
   .bg-destructive { background: var(--destructive); }
   .bg-input { background: var(--input); }
+  .bg-popover { background: var(--popover); }
+  
+  .text-popover-foreground { color: var(--popover-foreground); }
   
   .text-foreground { color: var(--foreground); }
   .text-muted-foreground { color: var(--muted-foreground); }

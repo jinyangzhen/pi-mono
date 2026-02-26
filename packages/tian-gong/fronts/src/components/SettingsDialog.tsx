@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Eye, EyeOff, X, Trash2, ChevronDown, Plus } from 'lucide-react'
-import { useProviders } from '../hooks/useProviders'
+
+
 
 interface SettingsDialogProps {
   open: boolean
@@ -17,9 +18,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   const [systemApiKeys, setSystemApiKeys] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [visibleKeys, setVisibleKeys] = useState<Record<string, boolean>>({})
-  const { providers } = useProviders()
+  const [allProviders, setAllProviders] = useState<Array<{ id: string; name: string }>>([])
   const [activeSection, setActiveSection] = useState<'api-keys'>('api-keys')
   const [showAddProvider, setShowAddProvider] = useState(false)
+
 
 
   const providerLabels: Record<string, string> = {
@@ -38,9 +40,20 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
     if (open) {
       fetchApiKeys()
       fetchSystemApiKeys()
+      fetchAllProviders()
     }
   }, [open])
 
+  const fetchAllProviders = async () => {
+    try {
+      const res = await fetch('/api/providers/all')
+      if (!res.ok) throw new Error('Failed to fetch providers')
+      const data = await res.json()
+      setAllProviders(data.providers || [])
+    } catch (error) {
+      console.error('Failed to fetch providers:', error)
+    }
+  }
   const fetchApiKeys = async () => {
     try {
       const res = await fetch('/api/me/api-keys')
@@ -102,13 +115,10 @@ export default function SettingsDialog({ open, onOpenChange }: SettingsDialogPro
   if (!open) return null
 
   const systemProviders = Object.keys(systemApiKeys)
-  const userProviders = providers.filter(
-    ({ id }) => !systemApiKeys[id]
-  )
-  const availableProviders = userProviders.filter(
-    ({ id }) => !apiKeys[id]
-  )
-
+  const userApiKeys = Object.keys(apiKeys).filter(key => !systemApiKeys[key])
+  // Filter out providers that are already configured (system or user level)
+  const configuredProviders = new Set([...systemProviders, ...userApiKeys])
+  const availableProviders = allProviders.filter(p => !configuredProviders.has(p.id))
   return (
     <div className="dialog-overlay" onClick={() => onOpenChange(false)}>
       <div className="dialog-content max-w-2xl" onClick={e => e.stopPropagation()}>

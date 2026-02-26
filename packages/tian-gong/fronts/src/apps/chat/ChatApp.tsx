@@ -32,10 +32,9 @@ interface Message {
 export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+const [isLoading, setIsLoading] = useState(false)
   const [providers, setProviders] = useState<Provider[]>([])
   const [models, setModels] = useState<Record<string, Model[]>>({})
-  
   // Track current session ID
   const [sessionId, setSessionId] = useState<string | undefined>(initialSessionId)
 
@@ -73,7 +72,7 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
   useEffect(() => {
     const fetchProviders = async () => {
       try {
-        const response = await fetch('/api/providers')
+        const response = await fetch('/api/providers?_=' + Date.now())
         const data: ProvidersResponse = await response.json()
         setProviders(data.providers)
         setModels(data.models)
@@ -96,7 +95,7 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
     }
     fetchProviders()
   }, [])
-  
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -111,8 +110,10 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
   }, [])
   
   // Get all available models across all providers
+  // Shows ALL system providers; user API keys override at API level
   const getAllModels = (): Array<Model & { providerId: string; providerName: string }> => {
     const allModels: Array<Model & { providerId: string; providerName: string }> = []
+    // Show all providers from the system
     for (const provider of providers) {
       const providerModels = models[provider.id] || []
       for (const model of providerModels) {
@@ -149,7 +150,7 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
     try {
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      const responseText = `I'm Tian-gong Agent (Model: ${selectedModel?.modelName || 'Unknown'}), an AI assistant. How can I help you today?`
+      const responseText = `I'm Tian-gong Agent (Model: ${selectedModel ? `${selectedModel.providerName}/${selectedModel.modelName}` : 'Unknown'}), an AI assistant. How can I help you today?`
       
       setMessages(prev => prev.map(msg => 
         msg.id === assistantMessage.id 
@@ -216,14 +217,14 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setShowModelDropdown(!showModelDropdown)}
-                  className="flex items-center gap-1.5 px-2 py-1 hover:bg-accent rounded transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 hover:bg-muted rounded transition-colors"
                 >
                   <Bot className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-foreground">{selectedModel?.modelName || 'Select model'}</span>
+                  <span className="text-sm text-foreground">{selectedModel ? `${selectedModel.providerName}/${selectedModel.modelName}` : 'Select model'}</span>
                   <ChevronDown className={`w-3 h-3 text-muted-foreground transition-transform ${showModelDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 {showModelDropdown && (
-                  <div className="absolute top-full left-0 mt-1 bg-popover border border-border rounded-md shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-md shadow-lg z-50 min-w-[200px] max-h-60 overflow-y-auto">
                     {getAllModels().map(model => (
                       <button
                         key={`${model.providerId}-${model.id}`}
@@ -236,11 +237,11 @@ export function ChatApp({ initialSessionId, onSessionChange }: AppProps) {
                           })
                           setShowModelDropdown(false)
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors ${
-                          selectedModel?.modelId === model.id && selectedModel?.providerId === model.providerId ? 'bg-accent' : ''
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-muted transition-colors ${
+                          selectedModel?.modelId === model.id && selectedModel?.providerId === model.providerId ? 'bg-muted text-foreground' : 'text-foreground'
                         }`}
                       >
-                        <div className="font-medium">{model.name}</div>
+                        <div className="font-medium">{model.providerName}/{model.name}</div>
                         <div className="text-xs text-muted-foreground">{model.providerName}</div>
                       </button>
                     ))}

@@ -87,13 +87,19 @@ export class TianGongAgentRunner {
 	}
 
 	/**
-	 * Send a prompt to the session
+	 * Send a prompt to the session with optional model selection
 	 */
-	async prompt(sessionId: string, input: string): Promise<void> {
+	async prompt(sessionId: string, input: string, model?: any): Promise<void> {
 		const result = this.sessions.get(sessionId);
 		if (!result) {
 			throw new Error(`Session not found: ${sessionId}`);
 		}
+		
+		// If model is provided, store it in session for this prompt
+		if (model) {
+			(result as any).lastUsedModel = model;
+		}
+		
 		await result.session.prompt(input);
 	}
 

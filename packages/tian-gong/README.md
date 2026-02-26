@@ -38,14 +38,14 @@ tian-gong start --workspace /path/to/workspace
 
 ### Access the UI
 
-- **Chat Mode (Default)**: http://localhost:3000/?mode=chat
-- **Terminal Mode**: http://localhost:3000/?mode=terminal
+- **Chat Mode (Default)**: http://localhost:3000/chat
+- **Terminal Mode**: http://localhost:3000/terminal
 
 ### Switch Modes
 
 Users can switch between modes in Settings, or via URL:
-- `/?mode=chat` - Chat interface for citizen developers
-- `/?mode=terminal` - Full terminal interface for engineers
+- `/chat` - Chat interface for citizen developers
+- `/terminal` - Full terminal interface for engineers
 
 ## Architecture
 
@@ -112,14 +112,14 @@ Share sessions or direct users to specific contexts using URL parameters:
 ### Mode Selection
 
 ```
-http://localhost:3000/?mode=chat      # Chat interface
-http://localhost:3000/?mode=terminal  # Terminal interface
+http://localhost:3000/chat      # Chat interface
+http://localhost:3000/terminal  # Terminal interface
 ```
 
 ### Session Sharing
 
 ```
-http://localhost:3000/?mode=chat&sessionId=abc123
+http://localhost:3000/chat&sessionId=abc123
 ```
 
 Users can share a direct link that loads a specific session, with the mode automatically selected. Session IDs are persisted in localStorage and can be shared via URL.
@@ -157,14 +157,14 @@ The Shell enforces these restrictions and redirects users to their default mode 
 
 ### For Citizen Developers (Chat Mode)
 
-1. Open http://localhost:3000/?mode=chat
+1. Open http://localhost:3000/chat
 2. Select a task template or describe your task
 3. Chat with the agent to complete your task
 4. Checkpoints are saved automatically
 
 ### For Engineers (Terminal Mode)
 
-1. Open http://localhost:3000/?mode=terminal
+1. Open http://localhost:3000/terminal
 2. Use full `pi` TUI commands
 3. All coding agent features available
 4. Switch to chat mode in settings if needed

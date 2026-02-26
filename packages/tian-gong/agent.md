@@ -326,7 +326,7 @@ Wave 4 (QA & Polish):
   Scenario: ChatApp renders correctly
     Tool: Playwright
     Steps:
-      1. Navigate to http://localhost:3000/?mode=chat
+      1. Navigate to http://localhost:3000/chat
       2. Verify chat panel is visible
     Expected Result: Chat UI loads
     Evidence: .sisyphus/evidence/t6-chat-remote.png
@@ -348,7 +348,7 @@ Wave 4 (QA & Polish):
   Scenario: TerminalApp renders correctly
     Tool: Playwright
     Steps:
-      1. Navigate to http://localhost:3000/?mode=terminal
+      1. Navigate to http://localhost:3000/terminal
       2. Verify terminal is visible
     Expected Result: Terminal UI loads with xterm
     Evidence: .sisyphus/evidence/t7-terminal-remote.png
@@ -390,8 +390,8 @@ Wave 4 (QA & Polish):
   Scenario: Route loads correct component
     Tool: Playwright
     Steps:
-      1. Navigate to http://localhost:3000/?mode=chat
-      2. Navigate to http://localhost:3000/?mode=terminal
+      1. Navigate to http://localhost:3000/chat
+      2. Navigate to http://localhost:3000/terminal
     Expected Result: Correct component renders for each
     Evidence: .sisyphus/evidence/t9-routing.png
   ```
@@ -495,7 +495,7 @@ Wave 4 (QA & Polish):
     Tool: Playwright
     Steps:
       1. Login as chat-only user
-      2. Navigate to /?mode=terminal
+      2. Navigate to /terminal
     Expected Result: Redirected to chat or shown error
     Evidence: .sisyphus/evidence/t14-role-restrict.log
   ```
@@ -607,8 +607,8 @@ cd packages/tian-gong && npm run start
 
 # Test routes
 curl http://localhost:3000/ | grep "root"  # Returns HTML
-curl http://localhost:3000/?mode=chat | grep "root"
-curl http://localhost:3000/?mode=terminal | grep "root"
+curl http://localhost:3000/chat | grep "root"
+curl http://localhost:3000/terminal | grep "root"
 
 # Test API
 curl http://localhost:3000/api/sessions
