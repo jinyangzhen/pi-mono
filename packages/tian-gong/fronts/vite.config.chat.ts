@@ -3,10 +3,16 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import federation from '@originjs/vite-plugin-federation'
 
+// Single config for ChatApp - supports both standalone and federation modes
+// FEDERATION=true → exposes ChatApp as remote for host consumption
+// FEDERATION=false or unset → runs as standalone SPA
+
+const isFederation = process.env.FEDERATION === 'true'
+
 export default defineConfig({
   plugins: [
     react(),
-    federation({
+    isFederation && federation({
       name: 'chat',
       filename: 'remoteEntry.js',
       exposes: {
@@ -15,14 +21,18 @@ export default defineConfig({
       remotes: {},
       shared: ['react', 'react-dom', 'zustand'],
     }),
-  ],
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Only scan chat.html entry, exclude host-specific files
+  optimizeDeps: {
+    entries: ['chat.html'],
+  },
   server: {
-    port: 3001,
+    port: 4001,
     cors: true,
     proxy: {
       '/api': {
@@ -36,7 +46,7 @@ export default defineConfig({
     },
   },
   preview: {
-    port: 3001,
+    port: 4001,
     cors: true,
   },
   build: {
@@ -45,10 +55,13 @@ export default defineConfig({
     target: 'esnext',
     minify: false,
     modulePreload: false,
-    rollupOptions: {
-      input: [],
-      // Only build federation artifacts, no HTML entry needed
-      preserveEntrySignatures: 'strict',
-    },
+    rollupOptions: isFederation
+      ? {
+          input: [], // Only federation artifacts when building for remote
+          preserveEntrySignatures: 'strict',
+        }
+      : {
+          input: ['chat.html'], // Standalone SPA build
+        },
   },
 })

@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import federation from '@originjs/vite-plugin-federation'
 
+// Host config - consumes remotes from ChatApp and TerminalApp
+// Remotes must be built with FEDERATION=true before running host
+
 export default defineConfig({
   plugins: [
     react(),
@@ -10,8 +13,8 @@ export default defineConfig({
       name: 'tian_gong_host',
       filename: 'remoteEntry.js',
       remotes: {
-        chat: 'http://localhost:3001/assets/remoteEntry.js',
-        terminal: 'http://localhost:3002/assets/remoteEntry.js',
+        chat: 'http://localhost:4001/assets/remoteEntry.js',
+        terminal: 'http://localhost:4002/assets/remoteEntry.js',
       },
       shared: ['react', 'react-dom', 'zustand'],
     }),
